@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robô Analisador Do Guinho</title>
+    <style>
+        /* TEMA E CORES */
+        body {
+            background: linear-gradient(135deg, #2b0044 0%, #000000 100%);
+            color: #00ff41; /* Verde Matrix/Robótico */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            border: 2px solid #8a2be2; /* Roxo */
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 20px #8a2be2;
+        }
+
+        h1 { color: #8a2be2; text-shadow: 2px 2px #000; }
+
+        select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #00ff41;
+            background: #1a1a1a;
+            color: white;
+            font-weight: bold;
+        }
+
+        button {
+            background: #8a2be2;
+            cursor: pointer;
+            transition: 0.3s;
+            border: none;
+        }
+
+        button:hover { background: #00ff41; color: black; }
+
+        /* ANIMAÇÃO DE CARREGAMENTO */
+        #loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(138, 43, 226, 0.3);
+            border-top: 4px solid #00ff41;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* RESULTADOS */
+        #results {
+            margin-top: 20px;
+            display: none;
+            text-align: left;
+            padding: 15px;
+            border-top: 1px solid #8a2be2;
+        }
+
+        .result-item { color: white; margin-bottom: 5px; }
+
+        footer {
+            margin-top: 50px;
+            font-size: 0.8em;
+            color: #8a2be2;
+        }
+
+        /* BOTÃO COMPARTILHAR */
+        #btnShare {
+            background: #25d366; /* Cor WhatsApp */
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false" onkeydown="return false">
+
+    <div class="container">
+        <h1>🤖 Robô Analisador Do Guinho</h1>
+        <p>Inteligência Artificial para Loterias</p>
+
+        <label>Escolha a Loteria:</label>
+        <select id="loteria">
+            <option value="Pt Rio">Pt Rio</option>
+            <option value="Look Goiás">Look Goiás</option>
+            <option value="Nacional">Nacional</option>
+        </select>
+
+        <label>Escolha a Modalidade:</label>
+        <select id="modalidade">
+            <option value="Milhar">Milhar</option>
+            <option value="Centena">Centena</option>
+            <option value="Dezena">Dezena</option>
+            <option value="Terno de Grupo">Terno de Grupo</option>
+        </select>
+
+        <button onclick="iniciarAnalise()">ANALISAR AGORA</button>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <p id="loadingText">Analisando sorteios da loteria...</p>
+        </div>
+
+        <div id="results">
+            <h3 id="resTitle"></h3>
+            <div id="resList"></div>
+            <button id="btnShare" onclick="compartilhar()">Compartilhar Análise</button>
+        </div>
+    </div>
+
+    <footer>
+        Criado por Guinho Do Bicho
+    </footer>
+
+    <script>
+        // Função para gerar números "aleatórios" mas fixos por dia
+        function pseudoRandom(seed) {
+            let x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function gerarNumeros(qtd, max, seedBase) {
+            let nums = [];
+            let seed = seedBase;
+            while(nums.length < qtd) {
+                let n = Math.floor(pseudoRandom(seed) * max);
+                // Ajuste para formatos específicos
+                let formatado = n.toString().padStart(max === 10000 ? 4 : (max === 1000 ? 3 : 2), '0');
+                if(!nums.includes(formatado)) nums.push(formatado);
+                seed++;
+            }
+            return nums;
+        }
+
+        function iniciarAnalise() {
+            // Esconder resultados anteriores e mostrar loading
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            const loteria = document.getElementById('loteria').value;
+            document.getElementById('loadingText').innerText = `Analisando sorteios da loteria ${loteria}...`;
+
+            // Simular 8 segundos de espera
+            setTimeout(() => {
+                exibirResultados();
+            }, 8000);
+        }
+
+        function exibirResultados() {
+            document.getElementById('loading').style.display = 'none';
+            const resultsDiv = document.getElementById('results');
+            const resList = document.getElementById('resList');
+            const loteria = document.getElementById('loteria').value;
+            const modalidade = document.getElementById('modalidade').value;
+
+            // Criar semente baseada na DATA (Ano-Mês-Dia) + Nome da Loteria + Modalidade
+            const hoje = new Date().toISOString().slice(0, 10);
+            let semente = 0;
+            const strSemente = hoje + loteria + modalidade;
+            for (let i = 0; i < strSemente.length; i++) {
+                semente += strSemente.charCodeAt(i);
+            }
+
+            let quantidade = 0;
+            let maximo = 100;
+
+            if(modalidade === "Milhar") { quantidade = 12; maximo = 10000; }
+            else if(modalidade === "Centena") { quantidade = 10; maximo = 1000; }
+            else if(modalidade === "Dezena") { quantidade = 12; maximo = 100; }
+            else if(modalidade === "Terno de Grupo") { quantidade = 16; maximo = 25; }
+
+            const palpites = gerarNumeros(quantidade, maximo, semente);
+            
+            document.getElementById('resTitle').innerText = `Palpites para ${loteria} (${modalidade}):`;
+            resList.innerHTML = palpites.join(" - ");
+            resultsDiv.style.display = 'block';
+        }
+
+        function compartilhar() {
+            const texto = `Confira os palpites do Robô do Guinho para hoje!\n${document.getElementById('resTitle').innerText}\n${document.getElementById('resList').innerText}`;
+            if (navigator.share) {
+                navigator.share({ title: 'Robô do Guinho', text: texto, url: window.location.href });
+            } else {
+                alert("Copiado para a área de transferência!");
+                navigator.clipboard.writeText(texto);
+            }
+        }
+
+        // Bloqueio básico de teclado (F12, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 || (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'S'.charCodeAt(0)))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>
