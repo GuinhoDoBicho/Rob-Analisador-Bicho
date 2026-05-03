@@ -18,9 +18,9 @@
 
         /* TELA DE LOGIN */
         #login-screen {
-            display: none; /* Começa escondido para o JS decidir se mostra ou não */
+            display: none;
             max-width: 400px;
-            margin: 100px auto;
+            margin: 50px auto;
             padding: 30px;
             border: 2px solid #00ff41;
             border-radius: 15px;
@@ -64,22 +64,25 @@
 
         button:hover { background: #00ff41; color: black; }
 
-        /* ANIMAÇÃO DE CARREGAMENTO */
-        #loading {
-            display: none;
+        /* BOTÃO DEMO ESPECÍFICO */
+        #btnDemo {
+            background: #444;
+            border: 1px dashed #00ff41;
             margin-top: 20px;
         }
+        #btnDemo:hover:not(:disabled) { background: #555; }
+        #btnDemo:disabled { cursor: not-allowed; opacity: 0.5; border-color: red; color: red; }
 
+        /* ANIMAÇÃO DE CARREGAMENTO */
+        #loading { display: none; margin-top: 20px; }
         .spinner {
             border: 4px solid rgba(138, 43, 226, 0.3);
             border-top: 4px solid #00ff41;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             animation: spin 1s linear infinite;
             margin: 10px auto;
         }
-
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* RESULTADOS */
@@ -92,25 +95,29 @@
             font-size: 1.2em;
         }
 
-        footer {
-            margin-top: 50px;
-            font-size: 0.8em;
-            color: #8a2be2;
-        }
-
+        footer { margin-top: 50px; font-size: 0.8em; color: #8a2be2; }
         #btnShare { background: #25d366; margin-top: 15px; }
     </style>
 </head>
 <body oncontextmenu="return false" onkeydown="bloquearTeclas(event)">
 
+    <!-- TELA DE ACESSO -->
     <div id="login-screen">
         <h2 style="color: #00ff41;">ACESSO RESTRITO</h2>
         <p>Digite a senha para liberar o Robô:</p>
         <input type="password" id="senhaInput" placeholder="Sua Senha Aqui">
         <button onclick="verificarSenha()">ENTRAR NO SISTEMA</button>
+        
+        <hr style="border: 0.5px solid #333; margin: 20px 0;">
+        
+        <p style="font-size: 0.9em;">Ainda não tem a senha? Faça um teste:</p>
+        <button id="btnDemo" onclick="ativarDemo()">TESTAR DEMONSTRAÇÃO</button>
+        <p id="demoAviso" style="font-size: 0.8em; color: #aaa;"></p>
     </div>
 
+    <!-- CONTEÚDO DO SITE -->
     <div id="main-content">
+        <div id="demoBadge" style="display:none; background: orange; color: black; font-weight: bold; padding: 5px; border-radius: 5px; margin-bottom: 10px;">MODO DEMONSTRAÇÃO ATIVO</div>
         <h1>🤖 Robô Analisador Do Guinho</h1>
         <p>Análise de Loterias Ativada</p>
 
@@ -148,32 +155,67 @@
     </footer>
 
     <script>
-        // VERIFICAÇÃO AUTOMÁTICA AO CARREGAR A PÁGINA
+        const LIMITE_DEMO = 3;
+
         window.onload = function() {
+            // Se já tiver acesso total, entra direto
             if (localStorage.getItem("acessoGuinho") === "autorizado") {
-                document.getElementById('main-content').style.display = 'block';
+                liberarAcesso(false);
             } else {
                 document.getElementById('login-screen').style.display = 'block';
+                atualizarInterfaceDemo();
             }
         };
 
-        // Lógica de Senha com Memorização
+        function atualizarInterfaceDemo() {
+            let usos = parseInt(localStorage.getItem("contagemDemo") || "0");
+            const btn = document.getElementById('btnDemo');
+            const aviso = document.getElementById('demoAviso');
+            
+            if (usos >= LIMITE_DEMO) {
+                btn.disabled = true;
+                btn.innerText = "TESTES ESGOTADOS";
+                aviso.innerText = "Você já usou seus 3 testes. Adquira a versão completa!";
+                aviso.style.color = "red";
+            } else {
+                btn.innerText = `TESTAR DEMONSTRAÇÃO (${LIMITE_DEMO - usos} RESTANTES)`;
+                aviso.innerText = "Você tem direito a 3 acessos de teste neste dispositivo.";
+            }
+        }
+
+        function ativarDemo() {
+            let usos = parseInt(localStorage.getItem("contagemDemo") || "0");
+            
+            if (usos < LIMITE_DEMO) {
+                usos++;
+                localStorage.setItem("contagemDemo", usos);
+                liberarAcesso(true);
+            }
+        }
+
         function verificarSenha() {
             const senhaCorreta = "ROBOANALISADOR";
             const senhaDigitada = document.getElementById('senhaInput').value;
 
             if (senhaDigitada === senhaCorreta) {
-                // Salva no navegador que este dispositivo está autorizado
                 localStorage.setItem("acessoGuinho", "autorizado");
-                
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
+                liberarAcesso(false);
             } else {
                 alert("Senha Incorreta! Acesso negado.");
             }
         }
 
-        // Lógica de Geração Fixa (Mesma do anterior)
+        function liberarAcesso(isDemo) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            if (isDemo) {
+                document.getElementById('demoBadge').style.display = 'block';
+            } else {
+                document.getElementById('demoBadge').style.display = 'none';
+            }
+        }
+
+        // --- FUNÇÕES DE ANÁLISE (Mantidas Intactas) ---
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
@@ -221,7 +263,6 @@
             document.getElementById('results').style.display = 'block';
         }
 
-        // FUNÇÃO DE COMPARTILHAMENTO ATUALIZADA (Sem link)
         function compartilhar() {
             const listagem = document.getElementById('resList').innerText;
             const titulo = document.getElementById('resTitle').innerText;
@@ -235,7 +276,6 @@
             }
         }
 
-        // Bloqueio de Teclas
         function bloquearTeclas(e) {
             if (e.keyCode == 123 || (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'S'.charCodeAt(0)))) {
                 e.preventDefault();
