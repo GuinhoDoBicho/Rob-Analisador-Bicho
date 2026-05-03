@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robô Analisador Do Guinho</title>
+    <title>Robô Analisador Do Guinho - Oficial</title>
     <style>
         /* TEMA E CORES */
         body {
             background: linear-gradient(135deg, #2b0044 0%, #000000 100%);
-            color: #00ff41; /* Verde Matrix/Robótico */
+            color: #00ff41; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
             margin: 0;
@@ -16,10 +16,24 @@
             overflow-x: hidden;
         }
 
-        .container {
+        /* TELA DE LOGIN */
+        #login-screen {
+            display: none; /* Começa escondido para o JS decidir se mostra ou não */
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            border: 2px solid #00ff41;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            box-shadow: 0 0 30px #00ff41;
+        }
+
+        /* CONTAINER PRINCIPAL */
+        #main-content {
+            display: none;
             max-width: 600px;
             margin: auto;
-            border: 2px solid #8a2be2; /* Roxo */
+            border: 2px solid #8a2be2; 
             padding: 20px;
             border-radius: 15px;
             background: rgba(0, 0, 0, 0.8);
@@ -28,7 +42,7 @@
 
         h1 { color: #8a2be2; text-shadow: 2px 2px #000; }
 
-        select, button {
+        input[type="password"], select, button {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
@@ -37,6 +51,7 @@
             background: #1a1a1a;
             color: white;
             font-weight: bold;
+            box-sizing: border-box;
         }
 
         button {
@@ -44,6 +59,7 @@
             cursor: pointer;
             transition: 0.3s;
             border: none;
+            text-transform: uppercase;
         }
 
         button:hover { background: #00ff41; color: black; }
@@ -70,12 +86,11 @@
         #results {
             margin-top: 20px;
             display: none;
-            text-align: left;
+            text-align: center;
             padding: 15px;
             border-top: 1px solid #8a2be2;
+            font-size: 1.2em;
         }
-
-        .result-item { color: white; margin-bottom: 5px; }
 
         footer {
             margin-top: 50px;
@@ -83,18 +98,21 @@
             color: #8a2be2;
         }
 
-        /* BOTÃO COMPARTILHAR */
-        #btnShare {
-            background: #25d366; /* Cor WhatsApp */
-            margin-top: 15px;
-        }
+        #btnShare { background: #25d366; margin-top: 15px; }
     </style>
 </head>
-<body oncontextmenu="return false" onkeydown="return false">
+<body oncontextmenu="return false" onkeydown="bloquearTeclas(event)">
 
-    <div class="container">
+    <div id="login-screen">
+        <h2 style="color: #00ff41;">ACESSO RESTRITO</h2>
+        <p>Digite a senha para liberar o Robô:</p>
+        <input type="password" id="senhaInput" placeholder="Sua Senha Aqui">
+        <button onclick="verificarSenha()">ENTRAR NO SISTEMA</button>
+    </div>
+
+    <div id="main-content">
         <h1>🤖 Robô Analisador Do Guinho</h1>
-        <p>Inteligência Artificial para Loterias</p>
+        <p>Análise de Loterias Ativada</p>
 
         <label>Escolha a Loteria:</label>
         <select id="loteria">
@@ -115,12 +133,12 @@
 
         <div id="loading">
             <div class="spinner"></div>
-            <p id="loadingText">Analisando sorteios da loteria...</p>
+            <p id="loadingText">Analisando sorteios...</p>
         </div>
 
         <div id="results">
-            <h3 id="resTitle"></h3>
-            <div id="resList"></div>
+            <h3 id="resTitle" style="color: #00ff41;"></h3>
+            <div id="resList" style="color: #fff; font-weight: bold;"></div>
             <button id="btnShare" onclick="compartilhar()">Compartilhar Análise</button>
         </div>
     </div>
@@ -130,7 +148,32 @@
     </footer>
 
     <script>
-        // Função para gerar números "aleatórios" mas fixos por dia
+        // VERIFICAÇÃO AUTOMÁTICA AO CARREGAR A PÁGINA
+        window.onload = function() {
+            if (localStorage.getItem("acessoGuinho") === "autorizado") {
+                document.getElementById('main-content').style.display = 'block';
+            } else {
+                document.getElementById('login-screen').style.display = 'block';
+            }
+        };
+
+        // Lógica de Senha com Memorização
+        function verificarSenha() {
+            const senhaCorreta = "ROBOANALISADOR";
+            const senhaDigitada = document.getElementById('senhaInput').value;
+
+            if (senhaDigitada === senhaCorreta) {
+                // Salva no navegador que este dispositivo está autorizado
+                localStorage.setItem("acessoGuinho", "autorizado");
+                
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            } else {
+                alert("Senha Incorreta! Acesso negado.");
+            }
+        }
+
+        // Lógica de Geração Fixa (Mesma do anterior)
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
@@ -141,7 +184,6 @@
             let seed = seedBase;
             while(nums.length < qtd) {
                 let n = Math.floor(pseudoRandom(seed) * max);
-                // Ajuste para formatos específicos
                 let formatado = n.toString().padStart(max === 10000 ? 4 : (max === 1000 ? 3 : 2), '0');
                 if(!nums.includes(formatado)) nums.push(formatado);
                 seed++;
@@ -150,65 +192,56 @@
         }
 
         function iniciarAnalise() {
-            // Esconder resultados anteriores e mostrar loading
             document.getElementById('results').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
-            
             const loteria = document.getElementById('loteria').value;
             document.getElementById('loadingText').innerText = `Analisando sorteios da loteria ${loteria}...`;
 
-            // Simular 8 segundos de espera
             setTimeout(() => {
                 exibirResultados();
-            }, 8000);
+            }, 8000); 
         }
 
         function exibirResultados() {
             document.getElementById('loading').style.display = 'none';
-            const resultsDiv = document.getElementById('results');
-            const resList = document.getElementById('resList');
             const loteria = document.getElementById('loteria').value;
             const modalidade = document.getElementById('modalidade').value;
-
-            // Criar semente baseada na DATA (Ano-Mês-Dia) + Nome da Loteria + Modalidade
             const hoje = new Date().toISOString().slice(0, 10);
             let semente = 0;
             const strSemente = hoje + loteria + modalidade;
-            for (let i = 0; i < strSemente.length; i++) {
-                semente += strSemente.charCodeAt(i);
-            }
+            for (let i = 0; i < strSemente.length; i++) { semente += strSemente.charCodeAt(i); }
 
-            let quantidade = 0;
-            let maximo = 100;
-
-            if(modalidade === "Milhar") { quantidade = 12; maximo = 10000; }
-            else if(modalidade === "Centena") { quantidade = 10; maximo = 1000; }
-            else if(modalidade === "Dezena") { quantidade = 12; maximo = 100; }
-            else if(modalidade === "Terno de Grupo") { quantidade = 16; maximo = 25; }
+            let quantidade = (modalidade === "Milhar") ? 12 : (modalidade === "Centena") ? 10 : (modalidade === "Dezena") ? 12 : 16;
+            let maximo = (modalidade === "Milhar") ? 10000 : (modalidade === "Centena") ? 1000 : (modalidade === "Dezena") ? 100 : 25;
 
             const palpites = gerarNumeros(quantidade, maximo, semente);
             
             document.getElementById('resTitle').innerText = `Palpites para ${loteria} (${modalidade}):`;
-            resList.innerHTML = palpites.join(" - ");
-            resultsDiv.style.display = 'block';
+            document.getElementById('resList').innerText = palpites.join(" - ");
+            document.getElementById('results').style.display = 'block';
         }
 
+        // FUNÇÃO DE COMPARTILHAMENTO ATUALIZADA (Sem link)
         function compartilhar() {
-            const texto = `Confira os palpites do Robô do Guinho para hoje!\n${document.getElementById('resTitle').innerText}\n${document.getElementById('resList').innerText}`;
+            const listagem = document.getElementById('resList').innerText;
+            const titulo = document.getElementById('resTitle').innerText;
+            const textoParaEnviar = `As análises feita pelo robô do Guinho indicam essas combinações!\n\n${titulo}\n${listagem}`;
+
             if (navigator.share) {
-                navigator.share({ title: 'Robô do Guinho', text: texto, url: window.location.href });
+                navigator.share({ text: textoParaEnviar }).catch(console.error);
             } else {
-                alert("Copiado para a área de transferência!");
-                navigator.clipboard.writeText(texto);
+                navigator.clipboard.writeText(textoParaEnviar);
+                alert("Análise copiada!");
             }
         }
 
-        // Bloqueio básico de teclado (F12, Ctrl+U)
-        document.onkeydown = function(e) {
+        // Bloqueio de Teclas
+        function bloquearTeclas(e) {
             if (e.keyCode == 123 || (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'S'.charCodeAt(0)))) {
+                e.preventDefault();
                 return false;
             }
-        };
+        }
     </script>
 </body>
 </html>
