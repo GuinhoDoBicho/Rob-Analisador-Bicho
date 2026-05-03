@@ -1,262 +1,245 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robô Analisador Das Alternativas Do Guinho</title>
+    <title>Robô Analisador Do Guinho - Oficial</title>
     <style>
+        /* TEMA E CORES */
         body {
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #00d4ff;
-            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2b0044 0%, #000000 100%);
+            color: #00ff41; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
             margin: 0;
             padding: 20px;
-            user-select: none;
+            overflow-x: hidden;
         }
 
-        .container {
-            max-width: 500px;
+        /* TELA DE LOGIN */
+        #login-screen {
+            display: none; /* Começa escondido para o JS decidir se mostra ou não */
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            border: 2px solid #00ff41;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            box-shadow: 0 0 30px #00ff41;
+        }
+
+        /* CONTAINER PRINCIPAL */
+        #main-content {
+            display: none;
+            max-width: 600px;
             margin: auto;
-            background: rgba(10, 10, 25, 0.95);
-            padding: 25px;
-            border-radius: 20px;
-            border: 2px solid #6a0dad;
-            box-shadow: 0 0 30px rgba(106, 13, 173, 0.6);
+            border: 2px solid #8a2be2; 
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 20px #8a2be2;
         }
 
-        h1 { color: #a200ff; font-size: 1.6em; text-shadow: 0 0 10px #6a0dad; }
+        h1 { color: #8a2be2; text-shadow: 2px 2px #000; }
 
-        label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9em; }
-
-        select, input, button {
+        input[type="password"], select, button {
             width: 100%;
-            padding: 15px;
-            margin: 8px 0;
-            border-radius: 10px;
-            border: none;
-            font-size: 16px;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #00ff41;
+            background: #1a1a1a;
+            color: white;
+            font-weight: bold;
             box-sizing: border-box;
         }
 
-        select, input { background: #1a1a2e; color: #00d4ff; border: 1px solid #6a0dad; }
-
         button {
-            background: #6a0dad;
-            color: white;
-            font-weight: bold;
-            text-transform: uppercase;
+            background: #8a2be2;
             cursor: pointer;
             transition: 0.3s;
+            border: none;
+            text-transform: uppercase;
         }
 
-        button:hover { background: #00d4ff; color: #000; }
+        button:hover { background: #00ff41; color: black; }
 
-        .btn-demo {
-            background: #24243e;
-            border: 1px solid #00d4ff;
-            font-size: 14px;
-        }
-
-        @keyframes pulsando {
-            0% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.03); color: #ff00ff; }
-            100% { opacity: 0.4; transform: scale(1); }
-        }
-
-        .analisando-txt {
+        /* ANIMAÇÃO DE CARREGAMENTO */
+        #loading {
             display: none;
-            margin: 20px 0;
-            font-weight: bold;
-            animation: pulsando 1.5s infinite;
-        }
-
-        .resultado {
-            background: #0f0c29;
-            padding: 15px;
-            border-radius: 10px;
             margin-top: 20px;
-            border: 1px solid #00d4ff;
+        }
+
+        .spinner {
+            border: 4px solid rgba(138, 43, 226, 0.3);
+            border-top: 4px solid #00ff41;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* RESULTADOS */
+        #results {
+            margin-top: 20px;
             display: none;
-            font-weight: bold;
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #8a2be2;
+            font-size: 1.2em;
         }
 
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; display: flex;
-            flex-direction: column; justify-content: center; align-items: center;
+        footer {
+            margin-top: 50px;
+            font-size: 0.8em;
+            color: #8a2be2;
         }
 
-        footer { margin-top: 40px; font-size: 0.8em; opacity: 0.7; }
+        #btnShare { background: #25d366; margin-top: 15px; }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body oncontextmenu="return false" onkeydown="bloquearTeclas(event)">
 
-    <!-- Tela de Acesso -->
     <div id="login-screen">
-        <h2 style="color: #a200ff;">🤖 ACESSO AO ROBÔ</h2>
-        <input type="password" id="senha-input" placeholder="DIGITE A SUA SENHA" style="max-width:300px;">
-        <button onclick="verificarAcesso()" style="width: 250px;">ENTRAR COM SENHA</button>
-        <p style="color: #555;">ou</p>
-        <button id="btn-demo-trigger" class="btn-demo" onclick="iniciarDemo()" style="width: 250px;">TESTE GRÁTIS (3 USOS)</button>
-        <p id="demo-msg" style="font-size: 12px; color: #ff00ff; margin-top: 10px;"></p>
+        <h2 style="color: #00ff41;">ACESSO RESTRITO</h2>
+        <p>Digite a senha para liberar o Robô:</p>
+        <input type="password" id="senhaInput" placeholder="Sua Senha Aqui">
+        <button onclick="verificarSenha()">ENTRAR NO SISTEMA</button>
     </div>
 
-    <div class="container">
-        <h1>🤖 Robô Analisador Das Alternativas Do Guinho</h1>
-        
-        <label>1. Selecione a Loteria:</label>
-        <select id="loteria-select" onchange="atualizarLimites()">
-            <option value="lotinha">Lotinha</option>
-            <option value="quininha">Quininha</option>
-            <option value="seninha">Seninha</option>
-            <option value="diadesortinha">Dia De Sortinha</option>
-            <option value="lotomaniazia">Lotomaniazia</option>
+    <div id="main-content">
+        <h1>🤖 Robô Analisador Do Guinho</h1>
+        <p>Análise de Loterias Ativada</p>
+
+        <label>Escolha a Loteria:</label>
+        <select id="loteria">
+            <option value="Pt Rio">Pt Rio</option>
+            <option value="Look Goiás">Look Goiás</option>
+            <option value="Nacional">Nacional</option>
         </select>
 
-        <label id="label-qtd">2. Quantas dezenas quer analisar? (3 a 23):</label>
-        <input type="number" id="qtd-dezenas" value="21" min="3" max="23">
+        <label>Escolha a Modalidade:</label>
+        <select id="modalidade">
+            <option value="Milhar">Milhar</option>
+            <option value="Centena">Centena</option>
+            <option value="Dezena">Dezena</option>
+            <option value="Terno de Grupo">Terno de Grupo</option>
+        </select>
 
-        <button onclick="gerarAnalise()">ANALISAR AGORA</button>
+        <button onclick="iniciarAnalise()">ANALISAR AGORA</button>
 
-        <div id="loading-text" class="analisando-txt">🔍 Analisando sorteios da loteria escolhida...</div>
-        
-        <div id="resultado-display" class="resultado"></div>
-        
-        <button id="btn-share" style="display:none; background:#00d4ff; color:#000;" onclick="fazerCompartilhamento()">Compartilhar Análise</button>
+        <div id="loading">
+            <div class="spinner"></div>
+            <p id="loadingText">Analisando sorteios...</p>
+        </div>
+
+        <div id="results">
+            <h3 id="resTitle" style="color: #00ff41;"></h3>
+            <div id="resList" style="color: #fff; font-weight: bold;"></div>
+            <button id="btnShare" onclick="compartilhar()">Compartilhar Análise</button>
+        </div>
     </div>
 
-    <footer>Criado por Guinho Lotofácil</footer>
+    <footer>
+        Criado por Guinho Do Bicho
+    </footer>
 
     <script>
-        // Bloqueios de segurança
-        document.onkeydown = function(e) {
-            if (e.keyCode == 123 || (e.ctrlKey && (e.shiftKey && e.keyCode == 73) || e.keyCode == 85)) return false;
+        // VERIFICAÇÃO AUTOMÁTICA AO CARREGAR A PÁGINA
+        window.onload = function() {
+            if (localStorage.getItem("acessoGuinho") === "autorizado") {
+                document.getElementById('main-content').style.display = 'block';
+            } else {
+                document.getElementById('login-screen').style.display = 'block';
+            }
         };
 
-        // Verificação de Acesso Vitalício
-        if (localStorage.getItem("robo_acesso") === "concedido") {
-            document.getElementById("login-screen").style.display = "none";
-        }
+        // Lógica de Senha com Memorização
+        function verificarSenha() {
+            const senhaCorreta = "ROBOANALISADOR";
+            const senhaDigitada = document.getElementById('senhaInput').value;
 
-        function verificarAcesso() {
-            if (document.getElementById("senha-input").value === "ROBOANALISADORALTERNATIVA") {
-                localStorage.setItem("robo_acesso", "concedido");
-                document.getElementById("login-screen").style.display = "none";
-            } else { alert("SENHA INCORRETA!"); }
-        }
-
-        // --- LÓGICA DE DEMONSTRAÇÃO ---
-        let modoDemo = false;
-
-        function iniciarDemo() {
-            // Pega a contagem atual ou começa em 0
-            let contagem = parseInt(localStorage.getItem("contagem_demo") || "0");
-
-            if (contagem >= 3) {
-                document.getElementById("demo-msg").innerHTML = "Limite de teste atingido!<br><a href='https://mpago.la/1VizFTj' style='color:#00d4ff;'>Clique aqui para comprar o acesso vitalício.</a>";
-                return;
+            if (senhaDigitada === senhaCorreta) {
+                // Salva no navegador que este dispositivo está autorizado
+                localStorage.setItem("acessoGuinho", "autorizado");
+                
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            } else {
+                alert("Senha Incorreta! Acesso negado.");
             }
-
-            // Incrementa e salva
-            contagem++;
-            localStorage.setItem("contagem_demo", contagem.toString());
-            
-            modoDemo = true;
-            document.getElementById("login-screen").style.display = "none";
-            alert(`Acesso de Demonstração Liberado!\nEste é o seu uso ${contagem} de 3.`);
         }
 
-        // Função de Limites (Loteria)
-        function atualizarLimites() {
-            const escolha = document.getElementById("loteria-select").value;
-            const inputQtd = document.getElementById("qtd-dezenas");
-            const label = document.getElementById("label-qtd");
-
-            const limites = {
-                'lotinha': { min: 3, max: 23, def: 21 },
-                'quininha': { min: 5, max: 45, def: 40 },
-                'seninha': { min: 6, max: 40, def: 40 },
-                'diadesortinha': { min: 7, max: 23, def: 20 },
-                'lotomaniazia': { min: 20, max: 85, def: 80 }
-            };
-
-            const config = limites[escolha];
-            inputQtd.min = config.min;
-            inputQtd.max = config.max;
-            inputQtd.value = config.def;
-            label.innerText = `2. Quantas dezenas quer analisar? (${config.min} a ${config.max}):`;
+        // Lógica de Geração Fixa (Mesma do anterior)
+        function pseudoRandom(seed) {
+            let x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
         }
 
-        // Gerador Diário
-        function obterNumeros(quantidade, maximo, minimo = 1) {
-            const dataHoje = new Date().toLocaleDateString();
-            let semente = 0;
-            for (let i = 0; i < dataHoje.length; i++) { semente += dataHoje.charCodeAt(i); }
-
-            let resultado = [];
-            let contador = 0;
-            while (resultado.length < quantidade) {
-                let n = Math.floor(Math.abs(Math.sin(semente + contador + quantidade) * (maximo - minimo + 1))) + minimo;
-                if (!resultado.includes(n)) { resultado.push(n); }
-                contador++;
+        function gerarNumeros(qtd, max, seedBase) {
+            let nums = [];
+            let seed = seedBase;
+            while(nums.length < qtd) {
+                let n = Math.floor(pseudoRandom(seed) * max);
+                let formatado = n.toString().padStart(max === 10000 ? 4 : (max === 1000 ? 3 : 2), '0');
+                if(!nums.includes(formatado)) nums.push(formatado);
+                seed++;
             }
-            return resultado.sort((a, b) => a - b).join(" - ");
+            return nums;
         }
 
-        function gerarAnalise() {
-            const qtdDesejada = parseInt(document.getElementById("qtd-dezenas").value);
-            const inputQtd = document.getElementById("qtd-dezenas");
-
-            if (qtdDesejada < inputQtd.min || qtdDesejada > inputQtd.max) {
-                alert(`Escolha entre ${inputQtd.min} e ${inputQtd.max} dezenas.`);
-                return;
-            }
-
-            const loading = document.getElementById("loading-text");
-            const display = document.getElementById("resultado-display");
-            const shareBtn = document.getElementById("btn-share");
-            
-            display.style.display = "none";
-            shareBtn.style.display = "none";
-            loading.style.display = "block";
-
-            const tempoRandom = Math.floor(Math.random() * 2001) + 8000;
+        function iniciarAnalise() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            const loteria = document.getElementById('loteria').value;
+            document.getElementById('loadingText').innerText = `Analisando sorteios da loteria ${loteria}...`;
 
             setTimeout(() => {
-                const escolha = document.getElementById("loteria-select").value;
-                let textoFinal = "";
-
-                if (escolha === "lotinha") textoFinal = obterNumeros(qtdDesejada, 25);
-                if (escolha === "quininha") textoFinal = obterNumeros(qtdDesejada, 80);
-                if (escolha === "seninha") textoFinal = obterNumeros(qtdDesejada, 60);
-                if (escolha === "diadesortinha") textoFinal = obterNumeros(qtdDesejada, 31);
-                if (escolha === "lotomaniazia") textoFinal = obterNumeros(qtdDesejada, 99, 0);
-
-                loading.style.display = "none";
-                display.innerHTML = "<strong>DEZENAS ANALISADAS:</strong><br><br>" + textoFinal;
-                display.style.display = "block";
-                shareBtn.style.display = "block";
-
-                // Se for modo demo, após a primeira análise ele bloqueia para forçar o recarregamento e contar novo uso
-                if (modoDemo) {
-                    setTimeout(() => {
-                        alert("Fim da demonstração de uso. Para continuar testando ou ter acesso vitalício, recarregue a página.");
-                        location.reload();
-                    }, 2000);
-                }
-            }, tempoRandom);
+                exibirResultados();
+            }, 8000); 
         }
 
-        function fazerCompartilhamento() {
-            const dezenas = document.getElementById("resultado-display").innerText.replace("DEZENAS ANALISADAS:", "");
-            const mensagem = "Análises feita pelo robô analisador viu que essas dezenas são as melhores para serem jogadas hoje:\n\n" + dezenas;
+        function exibirResultados() {
+            document.getElementById('loading').style.display = 'none';
+            const loteria = document.getElementById('loteria').value;
+            const modalidade = document.getElementById('modalidade').value;
+            const hoje = new Date().toISOString().slice(0, 10);
+            let semente = 0;
+            const strSemente = hoje + loteria + modalidade;
+            for (let i = 0; i < strSemente.length; i++) { semente += strSemente.charCodeAt(i); }
+
+            let quantidade = (modalidade === "Milhar") ? 12 : (modalidade === "Centena") ? 10 : (modalidade === "Dezena") ? 12 : 16;
+            let maximo = (modalidade === "Milhar") ? 10000 : (modalidade === "Centena") ? 1000 : (modalidade === "Dezena") ? 100 : 25;
+
+            const palpites = gerarNumeros(quantidade, maximo, semente);
+            
+            document.getElementById('resTitle').innerText = `Palpites para ${loteria} (${modalidade}):`;
+            document.getElementById('resList').innerText = palpites.join(" - ");
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // FUNÇÃO DE COMPARTILHAMENTO ATUALIZADA (Sem link)
+        function compartilhar() {
+            const listagem = document.getElementById('resList').innerText;
+            const titulo = document.getElementById('resTitle').innerText;
+            const textoParaEnviar = `As análises feita pelo robô do Guinho indicam essas combinações!\n\n${titulo}\n${listagem}`;
 
             if (navigator.share) {
-                navigator.share({ title: 'Robô Analisador', text: mensagem });
+                navigator.share({ text: textoParaEnviar }).catch(console.error);
             } else {
-                navigator.clipboard.writeText(mensagem);
-                alert("Copiado com sucesso!");
+                navigator.clipboard.writeText(textoParaEnviar);
+                alert("Análise copiada!");
+            }
+        }
+
+        // Bloqueio de Teclas
+        function bloquearTeclas(e) {
+            if (e.keyCode == 123 || (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'S'.charCodeAt(0)))) {
+                e.preventDefault();
+                return false;
             }
         }
     </script>
