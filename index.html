@@ -64,16 +64,14 @@
 
         button:hover { background: #00ff41; color: black; }
 
-        /* BOTÃO DEMO ESPECÍFICO */
         #btnDemo {
             background: #444;
             border: 1px dashed #00ff41;
             margin-top: 20px;
         }
-        #btnDemo:hover:not(:disabled) { background: #555; }
         #btnDemo:disabled { cursor: not-allowed; opacity: 0.5; border-color: red; color: red; }
 
-        /* ANIMAÇÃO DE CARREGAMENTO */
+        /* ANIMAÇÃO */
         #loading { display: none; margin-top: 20px; }
         .spinner {
             border: 4px solid rgba(138, 43, 226, 0.3);
@@ -101,21 +99,17 @@
 </head>
 <body oncontextmenu="return false" onkeydown="bloquearTeclas(event)">
 
-    <!-- TELA DE ACESSO -->
     <div id="login-screen">
         <h2 style="color: #00ff41;">ACESSO RESTRITO</h2>
         <p>Digite a senha para liberar o Robô:</p>
         <input type="password" id="senhaInput" placeholder="Sua Senha Aqui">
         <button onclick="verificarSenha()">ENTRAR NO SISTEMA</button>
-        
         <hr style="border: 0.5px solid #333; margin: 20px 0;">
-        
         <p style="font-size: 0.9em;">Ainda não tem a senha? Faça um teste:</p>
         <button id="btnDemo" onclick="ativarDemo()">TESTAR DEMONSTRAÇÃO</button>
         <p id="demoAviso" style="font-size: 0.8em; color: #aaa;"></p>
     </div>
 
-    <!-- CONTEÚDO DO SITE -->
     <div id="main-content">
         <div id="demoBadge" style="display:none; background: orange; color: black; font-weight: bold; padding: 5px; border-radius: 5px; margin-bottom: 10px;">MODO DEMONSTRAÇÃO ATIVO</div>
         <h1>🤖 Robô Analisador Do Guinho</h1>
@@ -150,15 +144,12 @@
         </div>
     </div>
 
-    <footer>
-        Criado por Guinho Do Bicho
-    </footer>
+    <footer>Criado por Guinho Do Bicho</footer>
 
     <script>
         const LIMITE_DEMO = 3;
 
         window.onload = function() {
-            // Se já tiver acesso total, entra direto
             if (localStorage.getItem("acessoGuinho") === "autorizado") {
                 liberarAcesso(false);
             } else {
@@ -171,21 +162,19 @@
             let usos = parseInt(localStorage.getItem("contagemDemo") || "0");
             const btn = document.getElementById('btnDemo');
             const aviso = document.getElementById('demoAviso');
-            
             if (usos >= LIMITE_DEMO) {
                 btn.disabled = true;
                 btn.innerText = "TESTES ESGOTADOS";
-                aviso.innerText = "Você já usou seus 3 testes. Adquira a versão completa!";
+                aviso.innerText = "Limites atingidos. Adquira a versão completa!";
                 aviso.style.color = "red";
             } else {
                 btn.innerText = `TESTAR DEMONSTRAÇÃO (${LIMITE_DEMO - usos} RESTANTES)`;
-                aviso.innerText = "Você tem direito a 3 acessos de teste neste dispositivo.";
+                aviso.innerText = "Você tem direito a 3 acessos de teste.";
             }
         }
 
         function ativarDemo() {
             let usos = parseInt(localStorage.getItem("contagemDemo") || "0");
-            
             if (usos < LIMITE_DEMO) {
                 usos++;
                 localStorage.setItem("contagemDemo", usos);
@@ -194,38 +183,33 @@
         }
 
         function verificarSenha() {
-            const senhaCorreta = "ROBOANALISADOR";
-            const senhaDigitada = document.getElementById('senhaInput').value;
-
-            if (senhaDigitada === senhaCorreta) {
+            if (document.getElementById('senhaInput').value === "ROBOANALISADOR") {
                 localStorage.setItem("acessoGuinho", "autorizado");
                 liberarAcesso(false);
-            } else {
-                alert("Senha Incorreta! Acesso negado.");
-            }
+            } else { alert("Senha Incorreta!"); }
         }
 
         function liberarAcesso(isDemo) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
-            if (isDemo) {
-                document.getElementById('demoBadge').style.display = 'block';
-            } else {
-                document.getElementById('demoBadge').style.display = 'none';
-            }
+            document.getElementById('demoBadge').style.display = isDemo ? 'block' : 'none';
         }
 
-        // --- FUNÇÕES DE ANÁLISE (Mantidas Intactas) ---
+        // --- LÓGICA DE GERAÇÃO CORRIGIDA ---
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
         }
 
-        function gerarNumeros(qtd, max, seedBase) {
+        function gerarNumeros(qtd, max, seedBase, isGrupo) {
             let nums = [];
             let seed = seedBase;
             while(nums.length < qtd) {
                 let n = Math.floor(pseudoRandom(seed) * max);
+                
+                // CORREÇÃO AQUI: Se for grupo, somamos 1 para o intervalo ser 01-25
+                if(isGrupo) n += 1; 
+
                 let formatado = n.toString().padStart(max === 10000 ? 4 : (max === 1000 ? 3 : 2), '0');
                 if(!nums.includes(formatado)) nums.push(formatado);
                 seed++;
@@ -236,12 +220,7 @@
         function iniciarAnalise() {
             document.getElementById('results').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
-            const loteria = document.getElementById('loteria').value;
-            document.getElementById('loadingText').innerText = `Analisando sorteios da loteria ${loteria}...`;
-
-            setTimeout(() => {
-                exibirResultados();
-            }, 8000); 
+            setTimeout(exibirResultados, 8000); 
         }
 
         function exibirResultados() {
@@ -254,9 +233,11 @@
             for (let i = 0; i < strSemente.length; i++) { semente += strSemente.charCodeAt(i); }
 
             let quantidade = (modalidade === "Milhar") ? 12 : (modalidade === "Centena") ? 10 : (modalidade === "Dezena") ? 12 : 16;
+            // Para grupos, o max é 25 (gerando 0-24 no código, que virá 1-25 com o ajuste)
             let maximo = (modalidade === "Milhar") ? 10000 : (modalidade === "Centena") ? 1000 : (modalidade === "Dezena") ? 100 : 25;
-
-            const palpites = gerarNumeros(quantidade, maximo, semente);
+            
+            // Passamos se é grupo ou não para a função
+            const palpites = gerarNumeros(quantidade, maximo, semente, modalidade === "Terno de Grupo");
             
             document.getElementById('resTitle').innerText = `Palpites para ${loteria} (${modalidade}):`;
             document.getElementById('resList').innerText = palpites.join(" - ");
@@ -264,16 +245,9 @@
         }
 
         function compartilhar() {
-            const listagem = document.getElementById('resList').innerText;
-            const titulo = document.getElementById('resTitle').innerText;
-            const textoParaEnviar = `As análises feita pelo robô do Guinho indicam essas combinações!\n\n${titulo}\n${listagem}`;
-
-            if (navigator.share) {
-                navigator.share({ text: textoParaEnviar }).catch(console.error);
-            } else {
-                navigator.clipboard.writeText(textoParaEnviar);
-                alert("Análise copiada!");
-            }
+            const texto = `As análises feita pelo robô do Guinho indicam essas combinações!\n\n${document.getElementById('resTitle').innerText}\n${document.getElementById('resList').innerText}`;
+            if (navigator.share) { navigator.share({ text: texto }); } 
+            else { navigator.clipboard.writeText(texto); alert("Copiado!"); }
         }
 
         function bloquearTeclas(e) {
