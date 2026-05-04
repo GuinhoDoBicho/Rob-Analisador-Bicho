@@ -93,12 +93,23 @@
             font-size: 1.2em;
         }
 
+        #demoBadge {
+            display:none; 
+            background: orange; 
+            color: black; 
+            font-weight: bold; 
+            padding: 5px; 
+            border-radius: 5px; 
+            margin-bottom: 10px;
+        }
+
         footer { margin-top: 50px; font-size: 0.8em; color: #8a2be2; }
         #btnShare { background: #25d366; margin-top: 15px; }
     </style>
 </head>
 <body oncontextmenu="return false" onkeydown="bloquearTeclas(event)">
 
+    <!-- TELA DE LOGIN -->
     <div id="login-screen">
         <h2 style="color: #00ff41;">ACESSO RESTRITO</h2>
         <p>Digite a senha para liberar o Robô:</p>
@@ -110,8 +121,9 @@
         <p id="demoAviso" style="font-size: 0.8em; color: #aaa;"></p>
     </div>
 
+    <!-- CONTEÚDO DO SITE -->
     <div id="main-content">
-        <div id="demoBadge" style="display:none; background: orange; color: black; font-weight: bold; padding: 5px; border-radius: 5px; margin-bottom: 10px;">MODO DEMONSTRAÇÃO ATIVO</div>
+        <div id="demoBadge">MODO DEMONSTRAÇÃO ATIVO</div>
         <h1>🤖 Robô Analisador Do Guinho</h1>
         <p>Análise de Loterias Ativada</p>
 
@@ -206,10 +218,7 @@
             let seed = seedBase;
             while(nums.length < qtd) {
                 let n = Math.floor(pseudoRandom(seed) * max);
-                
-                // CORREÇÃO AQUI: Se for grupo, somamos 1 para o intervalo ser 01-25
-                if(isGrupo) n += 1; 
-
+                if(isGrupo) n += 1; // Ajuste 01-25 para grupos
                 let formatado = n.toString().padStart(max === 10000 ? 4 : (max === 1000 ? 3 : 2), '0');
                 if(!nums.includes(formatado)) nums.push(formatado);
                 seed++;
@@ -220,6 +229,8 @@
         function iniciarAnalise() {
             document.getElementById('results').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
+            const loteria = document.getElementById('loteria').value;
+            document.getElementById('loadingText').innerText = `Analisando sorteios da loteria ${loteria}...`;
             setTimeout(exibirResultados, 8000); 
         }
 
@@ -227,16 +238,21 @@
             document.getElementById('loading').style.display = 'none';
             const loteria = document.getElementById('loteria').value;
             const modalidade = document.getElementById('modalidade').value;
-            const hoje = new Date().toISOString().slice(0, 10);
+            
+            // CORREÇÃO DA DATA: Pega a data local do dispositivo
+            const dataAtual = new Date();
+            const strData = dataAtual.getDate() + "/" + (dataAtual.getMonth() + 1) + "/" + dataAtual.getFullYear();
+            
+            // Criação da Semente única combinando Data + Loteria + Modalidade
             let semente = 0;
-            const strSemente = hoje + loteria + modalidade;
-            for (let i = 0; i < strSemente.length; i++) { semente += strSemente.charCodeAt(i); }
+            const strSemente = strData + loteria + modalidade;
+            for (let i = 0; i < strSemente.length; i++) { 
+                semente += strSemente.charCodeAt(i) * (i + 1); // Multiplicador para fortalecer a semente
+            }
 
             let quantidade = (modalidade === "Milhar") ? 12 : (modalidade === "Centena") ? 10 : (modalidade === "Dezena") ? 12 : 16;
-            // Para grupos, o max é 25 (gerando 0-24 no código, que virá 1-25 com o ajuste)
             let maximo = (modalidade === "Milhar") ? 10000 : (modalidade === "Centena") ? 1000 : (modalidade === "Dezena") ? 100 : 25;
             
-            // Passamos se é grupo ou não para a função
             const palpites = gerarNumeros(quantidade, maximo, semente, modalidade === "Terno de Grupo");
             
             document.getElementById('resTitle').innerText = `Palpites para ${loteria} (${modalidade}):`;
@@ -247,7 +263,7 @@
         function compartilhar() {
             const texto = `As análises feita pelo robô do Guinho indicam essas combinações!\n\n${document.getElementById('resTitle').innerText}\n${document.getElementById('resList').innerText}`;
             if (navigator.share) { navigator.share({ text: texto }); } 
-            else { navigator.clipboard.writeText(texto); alert("Copiado!"); }
+            else { navigator.clipboard.writeText(texto); alert("Análise copiada!"); }
         }
 
         function bloquearTeclas(e) {
