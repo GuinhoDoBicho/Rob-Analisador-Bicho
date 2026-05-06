@@ -16,7 +16,6 @@
             overflow-x: hidden;
         }
 
-        /* TELA DE LOGIN */
         #login-screen {
             display: none;
             max-width: 400px;
@@ -28,7 +27,6 @@
             box-shadow: 0 0 30px #00ff41;
         }
 
-        /* CONTAINER PRINCIPAL */
         #main-content {
             display: none;
             max-width: 600px;
@@ -109,7 +107,6 @@
 </head>
 <body oncontextmenu="return false" onkeydown="bloquearTeclas(event)">
 
-    <!-- TELA DE LOGIN -->
     <div id="login-screen">
         <h2 style="color: #00ff41;">ACESSO RESTRITO</h2>
         <p>Digite a senha para liberar o Robô:</p>
@@ -121,11 +118,10 @@
         <p id="demoAviso" style="font-size: 0.8em; color: #aaa;"></p>
     </div>
 
-    <!-- CONTEÚDO DO SITE -->
     <div id="main-content">
         <div id="demoBadge">MODO DEMONSTRAÇÃO ATIVO</div>
         <h1>🤖 Robô Analisador Do Guinho</h1>
-        <p>Análise de Loterias Ativada</p>
+        <p>IA conectada às tendências da Loteria Nacional</p>
 
         <label>Escolha a Loteria:</label>
         <select id="loteria">
@@ -146,12 +142,12 @@
 
         <div id="loading">
             <div class="spinner"></div>
-            <p id="loadingText">Analisando sorteios...</p>
+            <p id="loadingText" style="font-style: italic; color: #8a2be2;"></p>
         </div>
 
         <div id="results">
             <h3 id="resTitle" style="color: #00ff41;"></h3>
-            <div id="resList" style="color: #fff; font-weight: bold;"></div>
+            <div id="resList" style="color: #fff; font-weight: bold; background: rgba(0,255,65,0.1); padding: 10px; border-radius: 10px;"></div>
             <button id="btnShare" onclick="compartilhar()">Compartilhar Análise</button>
         </div>
     </div>
@@ -207,7 +203,6 @@
             document.getElementById('demoBadge').style.display = isDemo ? 'block' : 'none';
         }
 
-        // --- LÓGICA DE GERAÇÃO CORRIGIDA ---
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
@@ -218,7 +213,7 @@
             let seed = seedBase;
             while(nums.length < qtd) {
                 let n = Math.floor(pseudoRandom(seed) * max);
-                if(isGrupo) n += 1; // Ajuste 01-25 para grupos
+                if(isGrupo) n += 1; 
                 let formatado = n.toString().padStart(max === 10000 ? 4 : (max === 1000 ? 3 : 2), '0');
                 if(!nums.includes(formatado)) nums.push(formatado);
                 seed++;
@@ -230,7 +225,24 @@
             document.getElementById('results').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
             const loteria = document.getElementById('loteria').value;
-            document.getElementById('loadingText').innerText = `Analisando sorteios da loteria ${loteria}...`;
+            const lText = document.getElementById('loadingText');
+            
+            // SIMULAÇÃO DE ANÁLISE REAL (MENSAGENS)
+            const etapas = [
+                `Conectando ao banco de dados da ${loteria}...`,
+                "Acessando tendências em bichocerto.com...",
+                "Identificando dezenas mais saídas do dia...",
+                "Cruzando dados com sorteios anteriores...",
+                "Gerando combinações de alta probabilidade..."
+            ];
+
+            let i = 0;
+            const intervalo = setInterval(() => {
+                lText.innerText = etapas[i];
+                i++;
+                if(i >= etapas.length) clearInterval(intervalo);
+            }, 1600); // Muda a mensagem a cada 1.6 segundos para totalizar 8 segundos
+
             setTimeout(exibirResultados, 8000); 
         }
 
@@ -239,15 +251,13 @@
             const loteria = document.getElementById('loteria').value;
             const modalidade = document.getElementById('modalidade').value;
             
-            // CORREÇÃO DA DATA: Pega a data local do dispositivo
             const dataAtual = new Date();
             const strData = dataAtual.getDate() + "/" + (dataAtual.getMonth() + 1) + "/" + dataAtual.getFullYear();
             
-            // Criação da Semente única combinando Data + Loteria + Modalidade
             let semente = 0;
             const strSemente = strData + loteria + modalidade;
             for (let i = 0; i < strSemente.length; i++) { 
-                semente += strSemente.charCodeAt(i) * (i + 1); // Multiplicador para fortalecer a semente
+                semente += strSemente.charCodeAt(i) * (i + 1);
             }
 
             let quantidade = (modalidade === "Milhar") ? 12 : (modalidade === "Centena") ? 10 : (modalidade === "Dezena") ? 12 : 16;
