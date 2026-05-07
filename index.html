@@ -62,16 +62,14 @@
 
         button:hover { background: #00ff41; color: black; }
 
-        /* ESTILO DO BOTÃO DE COMPRA (APENAS PARA DEMO) */
         #btnComprarVersao {
-            background: #ffcc00; /* Dourado para destaque */
+            background: #ffcc00;
             color: #000;
             margin-top: 20px;
             border: 2px solid #fff;
             font-size: 1.1em;
-            display: none; /* Escondido por padrão */
+            display: none;
         }
-        #btnComprarVersao:hover { background: #fff; transform: scale(1.02); }
 
         #btnDemo {
             background: #444;
@@ -79,7 +77,6 @@
             margin-top: 20px;
         }
 
-        /* ANIMAÇÃO */
         #loading { display: none; margin-top: 20px; }
         .spinner {
             border: 4px solid rgba(138, 43, 226, 0.3);
@@ -158,7 +155,6 @@
             <div id="resList" style="color: #fff; font-weight: bold; background: rgba(0,255,65,0.1); padding: 10px; border-radius: 10px;"></div>
             
             <button id="btnShare" onclick="compartilhar()">Compartilhar Análise</button>
-            
             <button id="btnComprarVersao" onclick="window.open('https://mpago.la/1Xj2pnv', '_blank')">🛒 COMPRAR A VERSÃO COMPLETA</button>
         </div>
     </div>
@@ -208,20 +204,17 @@
             } else { alert("Senha Incorreta!"); }
         }
 
-        // FUNÇÃO QUE CONTROLA O QUE APARECE PARA QUEM
         function liberarAcesso(isDemo) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
-            
             const badge = document.getElementById('demoBadge');
             const btnComprar = document.getElementById('btnComprarVersao');
-
             if (isDemo) {
                 badge.style.display = 'block';
-                btnComprar.style.display = 'block'; // Mostra botão de compra no teste
+                btnComprar.style.display = 'block';
             } else {
                 badge.style.display = 'none';
-                btnComprar.style.display = 'none'; // Esconde botão de compra no VIP
+                btnComprar.style.display = 'none';
             }
         }
 
@@ -272,19 +265,27 @@
             const loteria = document.getElementById('loteria').value;
             const modalidade = document.getElementById('modalidade').value;
             
-            const dataAtual = new Date();
-            const strData = dataAtual.getDate() + "/" + (dataAtual.getMonth() + 1) + "/" + dataAtual.getFullYear();
+            // LÓGICA DE 12 HORAS CORRIGIDA
+            const agora = new Date();
+            const dia = agora.getDate();
+            const mes = agora.getMonth() + 1;
+            const ano = agora.getFullYear();
             
-            let semente = 0;
-            const strSemente = strData + loteria + modalidade;
+            // Determina o bloco de 12 horas: Manhã (00:00-11:59) ou Tarde (12:00-23:59)
+            const bloco12h = agora.getHours() < 12 ? "MANHA" : "TARDE";
+            
+            // Criamos a string da semente incluindo o bloco de 12 horas
+            const strSemente = `${dia}/${mes}/${ano}-${bloco12h}-${loteria}-${modalidade}`;
+            
+            let sementeNumerica = 0;
             for (let i = 0; i < strSemente.length; i++) { 
-                semente += strSemente.charCodeAt(i) * (i + 1);
+                sementeNumerica += strSemente.charCodeAt(i) * (i + 1);
             }
 
             let quantidade = (modalidade === "Milhar") ? 12 : (modalidade === "Centena") ? 10 : (modalidade === "Dezena") ? 12 : 16;
             let maximo = (modalidade === "Milhar") ? 10000 : (modalidade === "Centena") ? 1000 : (modalidade === "Dezena") ? 100 : 25;
             
-            const palpites = gerarNumeros(quantidade, maximo, semente, modalidade === "Terno de Grupo");
+            const palpites = gerarNumeros(quantidade, maximo, sementeNumerica, modalidade === "Terno de Grupo");
             
             document.getElementById('resTitle').innerText = `Palpites para ${loteria} (${modalidade}):`;
             document.getElementById('resList').innerText = palpites.join(" - ");
